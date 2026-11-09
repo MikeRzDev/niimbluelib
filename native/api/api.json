@@ -1,0 +1,655 @@
+{
+  "$comment": [
+    "libniimblue API spec: the single source of the generated binding methods (see api/generate.mjs, README 'Adding a method').",
+    "Every method is a JS bridge method (js/bridge.ts `methods`) reached through niim_call_bin. `npm run gen` writes the",
+    "typed wrappers for Go, Rust, Python, Swift and Kotlin; `npm run gen:check` verifies them and the bridge method list.",
+    "",
+    "method: JS method name. name: API name (camelCase); Go Pascal, Rust/Python snake, Swift/Kotlin camel; names: per-language overrides",
+    "  (a lowercase Go name keeps the method unexported, for a hand-written wrapper on top). doc: one sentence or more.",
+    "const: fixed params object entries. params: in order, required before optional; type int|bool|string|json|bytes or",
+    "  <Record>[], '?' = optional. json = raw JSON value (Go json.RawMessage, other bindings JSON text, Python any JSON-able",
+    "  value or JSON text). bytes = the binary payload. A record list sends its bytes field as offset/length slices of the",
+    "  payload. go = Go param type override (e.g. an options struct pointer).",
+    "result: void|bool|int|string|json|<Type>|<Type>[]; Go decodes into the type (from types below or hand-written in go/),",
+    "  Rust/Swift/Kotlin return bool/int natively and JSON text otherwise, Python parsed JSON (bytes fields decoded).",
+    "skip: languages that keep a hand-written version. internal: bridge methods only reached through their own C function.",
+    "types: Go structs (go/zz_api_types.go); record: true also generates the type in every binding (method params)."
+  ],
+  "internal": [
+    "disconnect"
+  ],
+  "methods": [
+    {
+      "method": "connect",
+      "name": "connectVirtual",
+      "doc": "Connect to a simulated printer driven by a request/response hex dump (testing).",
+      "const": {
+        "transport": "virtual"
+      },
+      "params": [
+        {
+          "name": "hexdump",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "type": "json?",
+          "go": "*ConnectOptions"
+        }
+      ],
+      "result": "ConnectionInfo"
+    },
+    {
+      "method": "connect",
+      "name": "connectPng",
+      "names": {
+        "go": "ConnectPNG",
+        "swift": "connectPNG"
+      },
+      "doc": "Connect to the PNG printer: the test print. Jobs run the real queue, print task and packets and each page becomes a PNG of the final tag as the printer puts it on paper (see pngPages). Options: {\"model\":\"B1\",\"labelWidth\",\"labelHeight\",\"printheadPixels\",\"printDirection\",\"protocolVersion\"}.",
+      "const": {
+        "transport": "png"
+      },
+      "params": [
+        {
+          "name": "options",
+          "type": "json?",
+          "go": "*PNGPrinterOptions"
+        }
+      ],
+      "result": "ConnectionInfo"
+    },
+    {
+      "method": "print",
+      "name": "print",
+      "names": {
+        "go": "PrintRaw"
+      },
+      "doc": "Print an image: pixels row-major, top-left first, format from options (\"rgba\" default, \"rgb\", \"gray\"). Options as niim_print in include/niimblue.h; {\"wait\":false} returns the job snapshot right away.",
+      "params": [
+        {
+          "name": "pixels",
+          "type": "bytes"
+        },
+        {
+          "name": "width",
+          "type": "int"
+        },
+        {
+          "name": "height",
+          "type": "int"
+        },
+        {
+          "name": "options",
+          "type": "json?",
+          "go": "*PrintOptions"
+        }
+      ],
+      "result": "PrintResult"
+    },
+    {
+      "method": "printBatch",
+      "name": "printBatch",
+      "names": {
+        "go": "printBatchRaw"
+      },
+      "doc": "Print several different images as one print job (one print task; the job prints the sum of the page quantities). Returns {\"printTask\",\"pages\",\"jobId\",\"images\":[{\"cols\",\"rows\",\"quantity\"}]}.",
+      "params": [
+        {
+          "name": "pages",
+          "type": "Page[]"
+        },
+        {
+          "name": "options",
+          "type": "json?",
+          "go": "*PrintOptions"
+        }
+      ],
+      "result": "PrintResult"
+    },
+    {
+      "method": "printBatch",
+      "name": "submit",
+      "names": {
+        "go": "submitRaw"
+      },
+      "const": {
+        "wait": false
+      },
+      "doc": "Queue a print job (printBatch) and return its snapshot right away; wait for it with waitJob.",
+      "params": [
+        {
+          "name": "pages",
+          "type": "Page[]"
+        },
+        {
+          "name": "options",
+          "type": "json?",
+          "go": "*PrintOptions"
+        }
+      ],
+      "result": "Job"
+    },
+    {
+      "method": "renderTemplate",
+      "name": "renderTemplate",
+      "skip": [
+        "go"
+      ],
+      "doc": "Render a .niim template package without a printer (the design, not a test print). Returns {\"width\",\"height\",\"printDirection\",\"format\":\"rgba\",\"pixels\":\"<base64 RGBA>\"}.",
+      "params": [
+        {
+          "name": "template",
+          "type": "bytes"
+        },
+        {
+          "name": "data",
+          "type": "json?"
+        },
+        {
+          "name": "options",
+          "type": "json?"
+        }
+      ],
+      "result": "json"
+    },
+    {
+      "method": "printTemplate",
+      "name": "printTemplate",
+      "skip": [
+        "go"
+      ],
+      "doc": "Print a .niim template package as one queued job; data is one object of tag values or an array of objects (one label each). Options: threshold, strict, quantity, density, labelType, printTask, wait, label, ...",
+      "params": [
+        {
+          "name": "template",
+          "type": "bytes"
+        },
+        {
+          "name": "data",
+          "type": "json?"
+        },
+        {
+          "name": "options",
+          "type": "json?"
+        }
+      ],
+      "result": "json"
+    },
+    {
+      "method": "isConnected",
+      "name": "isConnected",
+      "doc": "Whether a printer is connected.",
+      "result": "bool",
+      "skip": [
+        "go"
+      ]
+    },
+    {
+      "method": "getPrinterInfo",
+      "name": "printerInfo",
+      "doc": "Printer info fetched during connect (see fetchPrinterInfo to refresh it).",
+      "result": "PrinterInfo"
+    },
+    {
+      "method": "fetchPrinterInfo",
+      "name": "fetchPrinterInfo",
+      "doc": "Fetch the printer info from the printer again.",
+      "result": "PrinterInfo"
+    },
+    {
+      "method": "getModelMetadata",
+      "name": "modelMetadata",
+      "doc": "Metadata of the detected printer model (null when unknown).",
+      "result": "ModelMetadata?"
+    },
+    {
+      "method": "getPrintTaskType",
+      "name": "printTaskType",
+      "doc": "Print task detected for the printer, e.g. \"B1\" (null when unknown).",
+      "result": "string"
+    },
+    {
+      "method": "fetchHeartbeat",
+      "name": "heartbeat",
+      "doc": "Fetch the printer status (battery, lid, paper).",
+      "result": "HeartbeatData"
+    },
+    {
+      "method": "getHeartbeatData",
+      "name": "lastHeartbeat",
+      "doc": "Printer status of the last heartbeat (no printer request).",
+      "result": "HeartbeatData"
+    },
+    {
+      "method": "fetchRfidInfo",
+      "name": "rfidInfo",
+      "doc": "Fetch the RFID info of the inserted label roll.",
+      "result": "json"
+    },
+    {
+      "method": "getRfidInfo",
+      "name": "lastRfidInfo",
+      "doc": "RFID info of the last fetch (no printer request).",
+      "result": "json"
+    },
+    {
+      "method": "startHeartbeat",
+      "name": "startHeartbeat",
+      "doc": "Start the periodic heartbeat.",
+      "result": "void"
+    },
+    {
+      "method": "stopHeartbeat",
+      "name": "stopHeartbeat",
+      "doc": "Stop the periodic heartbeat.",
+      "result": "void"
+    },
+    {
+      "method": "setHeartbeatInterval",
+      "name": "setHeartbeatInterval",
+      "doc": "Heartbeat interval in milliseconds.",
+      "params": [
+        {
+          "name": "ms",
+          "type": "int"
+        }
+      ],
+      "result": "void"
+    },
+    {
+      "method": "setPacketInterval",
+      "name": "setPacketInterval",
+      "doc": "Delay between packets sent to the printer, in milliseconds.",
+      "params": [
+        {
+          "name": "ms",
+          "type": "int"
+        }
+      ],
+      "result": "void"
+    },
+    {
+      "method": "setDebug",
+      "name": "setDebug",
+      "doc": "Log protocol details (\"log\" events).",
+      "params": [
+        {
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "result": "void"
+    },
+    {
+      "method": "setVerboseEvents",
+      "name": "setVerboseEvents",
+      "doc": "Also emit packet level events.",
+      "params": [
+        {
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "result": "void"
+    },
+    {
+      "method": "setSoundEnabled",
+      "name": "setSoundEnabled",
+      "doc": "Turn a printer sound on or off. type: \"BluetoothConnectionSound\" or \"PowerSound\".",
+      "params": [
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "result": "void"
+    },
+    {
+      "method": "setAutoShutdownTime",
+      "name": "setAutoShutdownTime",
+      "doc": "Auto shutdown time: \"ShutdownTime1\" (usually 15 min) to \"ShutdownTime4\".",
+      "params": [
+        {
+          "name": "value",
+          "type": "string"
+        }
+      ],
+      "result": "void"
+    },
+    {
+      "method": "listModels",
+      "name": "models",
+      "doc": "All printer models known to niimbluelib.",
+      "result": "ModelMetadata[]"
+    },
+    {
+      "method": "listPrintTasks",
+      "name": "printTasks",
+      "doc": "Names of the print tasks (printTask option).",
+      "result": "string[]"
+    },
+    {
+      "method": "registerFont",
+      "name": "registerFont",
+      "doc": "Register a TrueType / OpenType font (TTF or OTF bytes, not WOFF) for template text under a CSS family name. weight 100..900 (default 400). Missing bold / italic faces are synthesized; registering the same face again replaces it.",
+      "params": [
+        {
+          "name": "family",
+          "type": "string"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "name": "weight",
+          "type": "int?"
+        },
+        {
+          "name": "italic",
+          "type": "bool?"
+        }
+      ],
+      "result": "FontInfo"
+    },
+    {
+      "method": "listFonts",
+      "name": "fonts",
+      "doc": "Fonts available for template text.",
+      "result": "FontInfo[]"
+    },
+    {
+      "method": "templateTags",
+      "name": "templateTags",
+      "doc": "Tag names a .niim template package uses, e.g. [\"sku\",\"url\"].",
+      "params": [
+        {
+          "name": "template",
+          "type": "bytes"
+        }
+      ],
+      "result": "string[]",
+      "skip": [
+        "go"
+      ]
+    },
+    {
+      "method": "pngPages",
+      "name": "pngPages",
+      "names": {
+        "go": "PNGPages"
+      },
+      "doc": "Pages printed by the PNG printer (niim_connect_png), all or of one job (last 200 pages).",
+      "params": [
+        {
+          "name": "jobId",
+          "type": "int?"
+        }
+      ],
+      "result": "PNGPage[]",
+      "skip": [
+        "swift"
+      ]
+    },
+    {
+      "method": "clearPngPages",
+      "name": "clearPngPages",
+      "names": {
+        "go": "ClearPNGPages",
+        "swift": "clearPNGPages"
+      },
+      "doc": "Forget the PNG printer pages, returns how many there were.",
+      "result": "int"
+    },
+    {
+      "method": "getJob",
+      "name": "job",
+      "doc": "Snapshot of a print job (active or one of the last ~100 finished).",
+      "params": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "result": "Job"
+    },
+    {
+      "method": "listJobs",
+      "name": "jobs",
+      "doc": "Active jobs and the last ~100 finished ones (oldest first).",
+      "result": "Job[]"
+    },
+    {
+      "method": "cancelJob",
+      "name": "cancelJob",
+      "doc": "Cancel a queued job. A job that is printing can't be cancelled.",
+      "params": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "result": "Job"
+    },
+    {
+      "method": "clearQueue",
+      "name": "clearQueue",
+      "doc": "Cancel every queued job, returns how many were cancelled.",
+      "result": "int"
+    },
+    {
+      "method": "waitJob",
+      "name": "waitJob",
+      "doc": "Wait until the job finished. Fails with the job error if it failed or was cancelled.",
+      "params": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "result": "Job"
+    },
+    {
+      "method": "pauseQueue",
+      "name": "pauseQueue",
+      "doc": "The printing job finishes, no new job starts until resumeQueue.",
+      "result": "void"
+    },
+    {
+      "method": "resumeQueue",
+      "name": "resumeQueue",
+      "doc": "Start queued jobs again.",
+      "result": "void"
+    },
+    {
+      "method": "isQueuePaused",
+      "name": "queuePaused",
+      "doc": "Whether the queue is paused.",
+      "result": "bool"
+    }
+  ],
+  "types": {
+    "Job": {
+      "doc": "Job is a snapshot of a print job.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "go": "ID"
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "goType": "JobState"
+        },
+        {
+          "name": "label",
+          "type": "string?"
+        },
+        {
+          "name": "pages",
+          "type": "int",
+          "doc": "Pages is the number of different images (or template labels), TotalPages includes copies."
+        },
+        {
+          "name": "totalPages",
+          "type": "int"
+        },
+        {
+          "name": "createdAt",
+          "type": "int64",
+          "go": "CreatedAtMs",
+          "doc": "Unix times in milliseconds (0 = not yet)."
+        },
+        {
+          "name": "startedAt",
+          "type": "int64?",
+          "go": "StartedAtMs"
+        },
+        {
+          "name": "finishedAt",
+          "type": "int64?",
+          "go": "FinishedAtMs"
+        },
+        {
+          "name": "error",
+          "type": "string?"
+        },
+        {
+          "name": "result",
+          "type": "json?",
+          "doc": "Result of a done job: PrintResult or TemplatePrintResult JSON."
+        }
+      ]
+    },
+    "JobEvent": {
+      "doc": "JobEvent is the payload of \"jobdone\" events (\"jobqueued\" and \"jobstarted\" carry a Job).",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "go": "ID"
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "goType": "JobState"
+        },
+        {
+          "name": "error",
+          "type": "string?"
+        },
+        {
+          "name": "result",
+          "type": "json?"
+        }
+      ]
+    },
+    "PageResult": {
+      "doc": "PageResult describes one printed image of a batch.",
+      "fields": [
+        {
+          "name": "cols",
+          "type": "int"
+        },
+        {
+          "name": "rows",
+          "type": "int"
+        },
+        {
+          "name": "quantity",
+          "type": "int"
+        }
+      ]
+    },
+    "PNGPage": {
+      "doc": "PNGPage is one label printed by the PNG printer: the final tag as the printer puts it on paper.",
+      "fields": [
+        {
+          "name": "jobId",
+          "type": "int",
+          "go": "JobID"
+        },
+        {
+          "name": "page",
+          "type": "int",
+          "doc": "1-based page number in the job"
+        },
+        {
+          "name": "copies",
+          "type": "int",
+          "doc": "copies the printer was told to print"
+        },
+        {
+          "name": "width",
+          "type": "int",
+          "doc": "label size in dots, reading orientation"
+        },
+        {
+          "name": "height",
+          "type": "int"
+        },
+        {
+          "name": "png",
+          "type": "bytes",
+          "go": "PNG",
+          "doc": "PNG file of the final tag."
+        }
+      ]
+    },
+    "FontInfo": {
+      "doc": "FontInfo describes a font registered for template text.",
+      "fields": [
+        {
+          "name": "family",
+          "type": "string"
+        },
+        {
+          "name": "weight",
+          "type": "int"
+        },
+        {
+          "name": "italic",
+          "type": "bool"
+        }
+      ]
+    },
+    "Page": {
+      "record": true,
+      "names": {
+        "go": "RawPage",
+        "swift": "NiimPage",
+        "kotlin": "NiimPage"
+      },
+      "doc": "One image of printBatch / submit.",
+      "fields": [
+        {
+          "name": "pixels",
+          "type": "bytes",
+          "doc": "width x height pixels, row-major (format in options)"
+        },
+        {
+          "name": "width",
+          "type": "int"
+        },
+        {
+          "name": "height",
+          "type": "int"
+        },
+        {
+          "name": "options",
+          "type": "json?",
+          "names": {
+            "kotlin": "optionsJson"
+          },
+          "doc": "Page options overriding the job options: {\"format\",\"stride\",\"quantity\",\"threshold\",\"printDirection\"}."
+        }
+      ]
+    }
+  }
+}

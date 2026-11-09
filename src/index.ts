@@ -12,3 +12,4 @@ export * from "./events";
 export * from "./utils";
 export * from "./printer_models";
 export * from "./print_tasks";
+export * from "./template";

@@ -1,0 +1,13 @@
+[package]
+name = "niimblue"
+version = "0.1.0"
+edition = "2021"
+description = "NIIMBOT label printer library (niimbluelib + QuickJS compiled into a static C library)"
+license = "MIT"
+links = "niimblue"
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+cmake = "0.1.58"

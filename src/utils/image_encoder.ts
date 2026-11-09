@@ -35,10 +35,20 @@ export interface ImageSource {
   getPixelColor(x: number, y: number, printDirection: PrintDirection): number;
 }
 
+/**
+ * Structural RGBA image data (compatible with DOM `ImageData` and Node canvas implementations).
+ * @category Image encoder
+ */
+export interface RawImageData {
+  readonly width: number;
+  readonly height: number;
+  readonly data: Uint8ClampedArray | Uint8Array;
+}
+
 /** @category Image encoder */
 export class CanvasImageSource implements ImageSource {
   private constructor(
-    private readonly iData: ImageData,
+    private readonly iData: RawImageData,
     public readonly width: number,
     public readonly height: number,
   ) {}
@@ -47,6 +57,14 @@ export class CanvasImageSource implements ImageSource {
     const ctx = canvas.getContext("2d")!;
     const iData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     return new CanvasImageSource(iData, canvas.width, canvas.height);
+  }
+
+  /** Create image source from RGBA pixel data (e.g. result of `getImageData`). */
+  public static fromImageData(iData: RawImageData): CanvasImageSource {
+    if (iData.data.length < iData.width * iData.height * 4) {
+      throw new Error("Image data is smaller than width * height * 4");
+    }
+    return new CanvasImageSource(iData, iData.width, iData.height);
   }
 
   public getPixelColor(x: number, y: number, printDirection: PrintDirection = "left"): number {

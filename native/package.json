@@ -1,0 +1,19 @@
+{
+  "name": "niimbluelib-native-bundler",
+  "private": true,
+  "description": "Bundles niimbluelib into generated/niim_bundle.c for libniimblue",
+  "type": "module",
+  "scripts": {
+    "gen": "node api/generate.mjs",
+    "gen:check": "node api/generate.mjs --check",
+    "bundle": "node js/build.mjs",
+    "bundle:debug": "node js/build.mjs --no-minify",
+    "typecheck": "tsc --noEmit -p js"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "opentype.js": "^1.3.4",
+    "tiny-inflate": "^1.0.3",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "types": [
+      "node",
+      "web-bluetooth",
+      "w3c-web-serial"
+    ],
+    "typeRoots": [
+      "../../node_modules/@types"
+    ]
+  },
+  "include": [
+    "*.ts",
+    "stubs/*.ts"
+  ]
+}
