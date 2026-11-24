@@ -1,0 +1,23 @@
+# CMake package for libniimblue.
+#
+#   find_package(niimblue CONFIG REQUIRED)
+#   target_link_libraries(app PRIVATE niimblue::niimblue)   # shared if installed, else static
+#
+# Targets: niimblue::shared, niimblue::static (whichever were installed), niimblue::niimblue.
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
+include("${CMAKE_CURRENT_LIST_DIR}/niimblueTargets.cmake")
+
+if(NOT TARGET niimblue::niimblue)
+  add_library(niimblue::niimblue INTERFACE IMPORTED)
+  if(TARGET niimblue::shared)
+    set_target_properties(niimblue::niimblue PROPERTIES INTERFACE_LINK_LIBRARIES niimblue::shared)
+  else()
+    set_target_properties(niimblue::niimblue PROPERTIES INTERFACE_LINK_LIBRARIES niimblue::static)
+  endif()
+endif()
+
+check_required_components(niimblue)

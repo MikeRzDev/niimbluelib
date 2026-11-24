@@ -1,0 +1,3 @@
+quickjs-ng v0.18.0 (d7215b0ad3fc2c562e8317fd9bca058fd4863804)
+https://github.com/quickjs-ng/quickjs
+Only the engine sources needed by libniimblue are vendored here (no libc, no CLI).

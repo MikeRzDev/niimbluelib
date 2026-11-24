@@ -1,3 +1,9 @@
+# Unreleased
+
+* Add template packages (`.niim`), the only template file format: a template with its images and fonts in one ZIP file. `readTemplate`, `packTemplate`, `unpackTemplate`, `isTemplatePackage`. The sample template is now `example/sample-template.niim`.
+* Templates can embed fonts (`fonts`), loaded before rendering through `RenderOptions.loadFont` (default: CSS Font Loading API when available).
+* Native library: templates are `.niim` packages only. **BREAKING:** `niim_render_template` / `niim_print_template` take the package bytes (`package`, `package_len`) instead of template JSON, and `renderTemplate` / `printTemplate` / `templateTags` take package bytes in every binding. Embedded TTF / OTF fonts are registered on render.
+
 # 0.50.0
 
 * **BREAKING:** Remove `instantiateClient`, `NiimbotClientType`, `Utils.isBluetoothSupported`, `Utils.isSerialSupported`, and `Utils.getAvailableTransports`. Instantiate clients directly or create own factory.

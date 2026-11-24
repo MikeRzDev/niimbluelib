@@ -3,3 +3,8 @@
 /node_modules
 .idea
 /www.jcprintersdk
+
+# SwiftPM / Xcode (Package.swift)
+/.build/
+/.swiftpm/
+/Package.resolved

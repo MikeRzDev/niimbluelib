@@ -1,0 +1,29 @@
+/build/
+/node_modules/
+/bindings/rust/target/
+/bindings/rust/Cargo.lock
+/generated/bundle.js
+*.test
+.DS_Store
+/examples/go/niimprint/niimprint
+/examples/go/niimtui/niimtui
+/examples/go/*/build/
+
+# Gradle / Android / NDK (bindings/kotlin)
+/bindings/kotlin/.gradle/
+/bindings/kotlin/.kotlin/
+/bindings/kotlin/build/
+/bindings/kotlin/*/build/
+/bindings/kotlin/*/.cxx/
+/bindings/kotlin/local.properties
+
+# Python (bindings/python, pip / scikit-build-core)
+__pycache__/
+*.py[cod]
+*.egg-info/
+/dist/
+.venv/
+
+# Xcode
+*.xcodeproj/
+DerivedData/
